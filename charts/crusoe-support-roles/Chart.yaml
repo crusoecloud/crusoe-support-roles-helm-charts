@@ -1,0 +1,20 @@
+apiVersion: v2
+name: crusoe-support-roles
+description: A Helm chart for managing Crusoe support roles in Crusoe Managed Kubernetes (CMK) clusters.
+
+type: application
+version: 0.1.0
+appVersion: "v0.1.0"
+
+kubeVersion: ">=1.17.0-0"
+home: https://github.com/crusoecloud/crusoe-support-roles-helm-charts
+sources:
+  - https://github.com/crusoecloud/crusoe-support-roles-helm-charts
+keywords:
+  - crusoe
+  - rbac
+  - support
+  - roles
+maintainers:
+  - name: Crusoe Cloud
+    url: https://github.com/crusoecloud/crusoe-support-roles-helm-charts
