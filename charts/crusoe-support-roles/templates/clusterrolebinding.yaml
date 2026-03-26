@@ -1,0 +1,21 @@
+{{- if .Values.roleBindings.enabled }}
+{{- range .Values.roleBindings.bindings }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .roleName }}-binding
+  labels:
+    {{- include "crusoe-support-roles.labels" $ | nindent 4 }}
+  {{- with $.Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .roleName }}
+subjects:
+  {{- toYaml .subjects | nindent 2 }}
+{{- end }}
+{{- end }}

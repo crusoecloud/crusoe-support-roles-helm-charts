@@ -1,0 +1,120 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crusoe-support-readonly
+  labels:
+    {{- include "crusoe-support-roles.labels" . | nindent 4 }}
+    crusoe.ai/support-role: "readonly"
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  {{- include "crusoe-support-roles.readonlyRules" . | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crusoe-support-operator
+  labels:
+    {{- include "crusoe-support-roles.labels" . | nindent 4 }}
+    crusoe.ai/support-role: "operator"
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # Include all readonly permissions (including CRDs)
+  {{- include "crusoe-support-roles.readonlyRules" . | nindent 2 }}
+  # Pod operations for troubleshooting
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs: ["delete"]  # Can delete stuck pods
+  - apiGroups: [""]
+    resources:
+      - pods/eviction # Evictions for drain operations
+    verbs: ["create"]  # Can evict pods for drain operations
+  # Node operations
+  - apiGroups: [""]
+    resources:
+      - nodes
+    verbs: ["patch"]  # Can cordon/uncordon
+  # Deployment operations for remediation
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - daemonsets
+      - statefulsets
+      - replicasets
+    verbs: ["patch"]  # Can trigger rollouts (read permissions come from readonly rules)
+  - apiGroups: ["apps"]
+    resources:
+      - deployments/scale
+      - statefulsets/scale
+    verbs: ["patch", "update"]  # Can scale workloads
+  # CRD modifications for GPU/Network operator troubleshooting
+  - apiGroups: ["nvidia.com"]
+    resources:
+      - clusterpolicies
+      - nvidiadrivers
+      - computedomains
+    verbs: ["patch", "update"]  # Can modify GPU operator config
+  - apiGroups: ["mellanox.com"]
+    resources:
+      - hostdevicenetworks
+      - nicclusterpolicies
+    verbs: ["patch", "update"]  # Can modify network operator config
+  - apiGroups: ["amd.com"]
+    resources:
+      - deviceconfigs
+      - networkconfigs
+      - remediationworkflowstatuses
+    verbs: ["patch", "update"]  # Can modify AMD GPU/network operator config
+  - apiGroups: ["k8s.cni.cncf.io"]
+    resources:
+      - network-attachment-definitions
+    verbs: ["create", "update", "patch", "delete"]  # Can modify Multus network configs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crusoe-support-logs
+  labels:
+    {{- include "crusoe-support-roles.labels" . | nindent 4 }}
+    crusoe.ai/support-role: "logs"
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # Pod log access only - designed to be bound at namespace level
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crusoe-support-debug
+  labels:
+    {{- include "crusoe-support-roles.labels" . | nindent 4 }}
+    crusoe.ai/support-role: "debug"
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  # Pod debugging access - designed to be bound at namespace level
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - pods/exec
+      - pods/portforward
+    verbs: ["create"]  # Can exec/port-forward for debugging

@@ -1,0 +1,65 @@
+# Default values for crusoe-support-roles
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Cluster role bindings configuration
+roleBindings:
+  enabled: true
+
+  # List of cluster role bindings to create
+  bindings:
+    - roleName: crusoe-support-readonly
+      subjects:
+        - kind: Group
+          name: crusoe:support:readonly
+          apiGroup: rbac.authorization.k8s.io
+    - roleName: crusoe-support-operator
+      subjects:
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+
+# Namespace-scoped role bindings configuration
+# Use this for roles that should be limited to specific namespaces (e.g., crusoe-support-logs)
+namespaceRoleBindings:
+  enabled: true
+
+  # List of namespace-scoped role bindings to create
+  bindings:
+    - roleName: crusoe-support-logs
+      namespaces:
+        - crusoe-system
+        - kube-system
+        - nvidia-gpu-operator
+        - nvidia-network-operator
+        - kube-amd-gpu
+        - kube-amd-network
+        - slinky
+      subjects:
+        - kind: Group
+          name: crusoe:support:readonly
+          apiGroup: rbac.authorization.k8s.io
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+    - roleName: crusoe-support-debug
+      namespaces:
+        - crusoe-system
+        - kube-system
+        - nvidia-gpu-operator
+        - nvidia-network-operator
+        - kube-amd-gpu
+        - kube-amd-network
+        - slinky
+      subjects:
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+
+# Labels to apply to all resources
+commonLabels:
+  crusoe.ai/managed: "true"
+
+# Annotations to apply to all resources
+commonAnnotations: {}
+  # description: "Managed by Helm"
