@@ -6,6 +6,7 @@ The following ClusterRoles have been created:
   - crusoe-support-readonly (comprehensive read-only access, no logs)
   - crusoe-support-operator (read-only + operational capabilities, no logs)
   - crusoe-support-logs (pod and log access only, bind at namespace level)
+  - crusoe-support-debug (pod exec and port forward access, bind at namespace level)
 
 {{- if .Values.roleBindings.enabled }}
 {{- if .Values.roleBindings.bindings }}

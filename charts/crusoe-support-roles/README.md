@@ -8,20 +8,21 @@ This Helm chart simplifies the creation and management of cluster-wide RBAC role
 
 ### Built-in ClusterRoles
 
-This chart creates three predefined ClusterRoles:
+This chart creates four predefined ClusterRoles:
 
 - **crusoe-support-readonly**: Comprehensive read-only access to cluster resources including:
   - Core resources: pods, services, deployments, nodes, storage, networking, RBAC
-  - Custom Resources: NVIDIA GPU Operator (ClusterPolicies, NvidiaDrivers), NVIDIA Network Operator (NICClusterPolicies, HostDeviceNetworks), Multus CNI (NetworkAttachmentDefinitions)
+  - Includes CRDs: NVIDIA GPU Operator (ClusterPolicies, NvidiaDrivers), NVIDIA Network Operator (NICClusterPolicies, HostDeviceNetworks), AMD GPU and Network Operators, Cilium CNI, Multus CNI
   - Does not include pod log access.
 - **crusoe-support-operator**: Includes all readonly permissions plus operational capabilities such as:
   - Delete pods (for stuck pods)
-  - Exec into pods and port-forward (for debugging)
   - Cordon/uncordon nodes
   - Create pod evictions (for drain operations)
   - Scale and trigger rollouts for deployments, statefulsets, and daemonsets
   - Modify GPU/Network operator CRDs (ClusterPolicies, NvidiaDrivers, NICClusterPolicies, HostDeviceNetworks, NetworkAttachmentDefinitions)
 - **crusoe-support-logs**: Limited to pod and pod log read access. Designed to be bound at the namespace level for granular log access control.
+- **crusoe-support-debug**: Pod debugging capabilities designed to be bound at the namespace level for granular control:
+  - Exec into pods and port-forward (for debugging)
 
 ## Installation
 
@@ -55,7 +56,7 @@ The following table lists the configurable parameters of the chart and their def
 | `roleBindings.enabled` | Enable cluster role bindings creation | `true` |
 | `roleBindings.bindings` | List of cluster role bindings to create | See values.yaml |
 | `namespaceRoleBindings.enabled` | Enable namespace-scoped role bindings creation | `true` |
-| `namespaceRoleBindings.bindings` | List of namespace-scoped role bindings to create | `[]` |
+| `namespaceRoleBindings.bindings` | List of namespace-scoped role bindings to create | See values.yaml |
 | `commonLabels` | Labels to apply to all resources | `{}` |
 | `commonAnnotations` | Annotations to apply to all resources | `{}` |
 
@@ -89,15 +90,30 @@ Create namespace-scoped RoleBindings for granular control:
 namespaceRoleBindings:
   enabled: true
   bindings:
-    # Bind logs role to multiple namespaces
+    # Bind logs role to system namespaces
     - roleName: crusoe-support-logs
       namespaces:
-        - production
-        - staging
-        - development
+        - crusoe-system
+        - kube-system
+        - nvidia-gpu-operator
+        # ... (see values.yaml for full list)
       subjects:
         - kind: Group
-          name: crusoe:support:logs
+          name: crusoe:support:readonly
+          apiGroup: rbac.authorization.k8s.io
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+    # Bind debug role to system namespaces
+    - roleName: crusoe-support-debug
+      namespaces:
+        - crusoe-system
+        - kube-system
+        - nvidia-gpu-operator
+        # ... (see values.yaml for full list)
+      subjects:
+        - kind: Group
+          name: crusoe:support:operator
           apiGroup: rbac.authorization.k8s.io
 ```
 
