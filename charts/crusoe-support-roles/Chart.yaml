@@ -3,8 +3,8 @@ name: crusoe-support-roles
 description: A Helm chart for managing Crusoe support roles in Crusoe Managed Kubernetes (CMK) clusters.
 
 type: application
-version: 0.1.0
-appVersion: "v0.1.0"
+version: 0.1.1
+appVersion: "v0.1.1"
 
 kubeVersion: ">=1.17.0-0"
 home: https://github.com/crusoecloud/crusoe-support-roles-helm-charts

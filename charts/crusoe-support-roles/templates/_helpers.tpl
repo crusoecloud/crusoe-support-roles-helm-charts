@@ -67,7 +67,6 @@ Readonly RBAC rules - shared between readonly and operator roles
     - nodes
     - namespaces
     - events
-    - serviceaccounts
     - resourcequotas
     - limitranges
   verbs: ["get", "list", "watch"]
