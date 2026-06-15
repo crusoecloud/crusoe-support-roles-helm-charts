@@ -59,6 +59,32 @@ The following table lists the configurable parameters of the chart and their def
 | `namespaceRoleBindings.bindings` | List of namespace-scoped role bindings to create | See values.yaml |
 | `commonLabels` | Labels to apply to all resources | `{}` |
 | `commonAnnotations` | Annotations to apply to all resources | `{}` |
+| `apiPriorityAndFairness.enabled` | Create the APF FlowSchema + PriorityLevelConfiguration | `true` |
+| `apiPriorityAndFairness.name` | Name shared by the FlowSchema and PriorityLevelConfiguration | `crusoe-support` |
+| `apiPriorityAndFairness.nominalConcurrencyShares` | Share of API server concurrency allocated to support traffic | `10` |
+| `apiPriorityAndFairness.subjects` | Groups/users/service accounts subject to the limit | Support groups |
+
+### API Priority and Fairness
+
+The chart can provision a dedicated [API Priority and Fairness](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/) (APF) `FlowSchema` and `PriorityLevelConfiguration` that cap the concurrent requests the API server will serve for the support credential groups. This isolates support traffic into its own priority level so a burst of support activity cannot starve the rest of the control plane.
+
+- The `PriorityLevelConfiguration` is `Limited`, with `nominalConcurrencyShares` controlling its slice of the API server's concurrency budget.
+- The `FlowSchema` matches the configured `subjects` (by default the `crusoe:support:readonly` and `crusoe:support:operator` groups) and routes them to that priority level, distinguishing flows `ByUser`.
+- The FlowSchema's `matchingPrecedence` is left to the API server default (`1000`). Over-limit requests are queued; the queuing parameters are set in the template to the standard defaults (the API server requires them to be specified explicitly).
+
+Requires a cluster serving `flowcontrol.apiserver.k8s.io/v1` (Kubernetes 1.29+).
+
+```yaml
+apiPriorityAndFairness:
+  enabled: true
+  name: crusoe-support
+  nominalConcurrencyShares: 10
+  subjects:
+    - kind: Group
+      name: crusoe:support:readonly
+    - kind: Group
+      name: crusoe:support:operator
+```
 
 ### Example Custom Values
 

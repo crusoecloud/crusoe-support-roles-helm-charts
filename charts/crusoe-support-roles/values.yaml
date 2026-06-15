@@ -56,6 +56,29 @@ namespaceRoleBindings:
           name: crusoe:support:operator
           apiGroup: rbac.authorization.k8s.io
 
+# API Priority and Fairness (APF) configuration
+# Creates a dedicated FlowSchema + PriorityLevelConfiguration that caps the
+# concurrent requests the API server will serve for the support credential
+# groups, protecting the control plane from support-side load spikes.
+apiPriorityAndFairness:
+  enabled: true
+
+  # Name shared by the FlowSchema and PriorityLevelConfiguration
+  name: crusoe-support
+
+  # Share of the API server's total concurrency budget allocated to support
+  # traffic. The effective concurrency limit is proportional to this value
+  # across all priority levels, so lower shares mean fewer concurrent support
+  # requests executed at once.
+  nominalConcurrencyShares: 10
+
+  # Credential groups (or users/service accounts) subject to this limit.
+  subjects:
+    - kind: Group
+      name: crusoe:support:readonly
+    - kind: Group
+      name: crusoe:support:operator
+
 # Labels to apply to all resources
 commonLabels:
   crusoe.ai/managed: "true"

@@ -1,0 +1,73 @@
+{{- if .Values.apiPriorityAndFairness.enabled }}
+{{- $apf := .Values.apiPriorityAndFairness }}
+---
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: PriorityLevelConfiguration
+metadata:
+  name: {{ $apf.name }}
+  labels:
+    {{- include "crusoe-support-roles.labels" $ | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: Limited
+  limited:
+    # Share of the API server's concurrency budget allocated to support traffic.
+    nominalConcurrencyShares: {{ $apf.nominalConcurrencyShares }}
+    limitResponse:
+      # Queue over-limit requests rather than rejecting them. The queuing block
+      # is required when type is Queue (the API server does not default it);
+      # these values match the standard defaults.
+      type: Queue
+      queuing:
+        queues: 64
+        handSize: 8
+        queueLengthLimit: 50
+---
+apiVersion: flowcontrol.apiserver.k8s.io/v1
+kind: FlowSchema
+metadata:
+  name: {{ $apf.name }}
+  labels:
+    {{- include "crusoe-support-roles.labels" $ | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  priorityLevelConfiguration:
+    name: {{ $apf.name }}
+  # matchingPrecedence is omitted; the API server defaults it to 1000, which sits
+  # below the built-in catch-all schemas so support traffic lands in this level.
+  distinguisherMethod:
+    # Required. Distinguish flows per user so a single noisy principal cannot
+    # starve other members of the support group.
+    type: ByUser
+  rules:
+    - subjects:
+        {{- range $apf.subjects }}
+        - kind: {{ .kind }}
+          {{- if eq .kind "Group" }}
+          group:
+            name: {{ .name }}
+          {{- else if eq .kind "User" }}
+          user:
+            name: {{ .name }}
+          {{- else if eq .kind "ServiceAccount" }}
+          serviceAccount:
+            namespace: {{ .namespace }}
+            name: {{ .name }}
+          {{- end }}
+        {{- end }}
+      resourceRules:
+        - verbs: ["*"]
+          apiGroups: ["*"]
+          resources: ["*"]
+          clusterScope: true
+          namespaces: ["*"]
+      nonResourceRules:
+        - verbs: ["*"]
+          nonResourceURLs: ["*"]
+{{- end }}
