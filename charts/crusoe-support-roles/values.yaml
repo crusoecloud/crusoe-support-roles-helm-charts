@@ -42,6 +42,13 @@ namespaceRoleBindings:
         - kind: Group
           name: crusoe:support:operator
           apiGroup: rbac.authorization.k8s.io
+    - roleName: crusoe-support-logs
+      namespaces:
+        - slurm
+      subjects:
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
     - roleName: crusoe-support-debug
       namespaces:
         - crusoe-system
@@ -51,6 +58,7 @@ namespaceRoleBindings:
         - kube-amd-gpu
         - kube-amd-network
         - slinky
+        - slurm
       subjects:
         - kind: Group
           name: crusoe:support:operator

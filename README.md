@@ -2,8 +2,6 @@
 
 This repository defines the official Crusoe Managed Kubernetes Support Roles Helm Charts for use with [Crusoe Cloud](https://crusoecloud.com/).
 
-**The CMK Support Roles Helm Charts are currently in :construction: Alpha :construction:.**
-
 ## Support
 
 **The Crusoe Support Roles are intended to enable support access to Crusoe Managed Kubernetes (CMK) clusters.** 
@@ -13,6 +11,11 @@ This guide assumes that the user has already set up CMK on Crusoe Cloud.
 ## Changelog
 
 Please refer to the [CHANGELOG](CHANGELOG.md) for breaking changes and upgrade instructions.
+
+
+## Security
+
+To report a security vulnerability, please follow the process described in our [security policy](SECURITY.md).
 
 
 ## Installation

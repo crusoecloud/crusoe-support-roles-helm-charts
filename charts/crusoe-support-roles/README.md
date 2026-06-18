@@ -143,6 +143,45 @@ namespaceRoleBindings:
           apiGroup: rbac.authorization.k8s.io
 ```
 
+#### Scoping a Role to Different Groups per Namespace
+
+To grant a role to different groups in different namespaces (for example, letting
+both support groups read logs in the system namespaces while restricting `slurm`
+logs to the `operator` group only), partition the namespaces across multiple
+binding entries for the same `roleName`:
+
+```yaml
+namespaceRoleBindings:
+  enabled: true
+  bindings:
+    # Shared: both groups can read logs in these namespaces
+    - roleName: crusoe-support-logs
+      namespaces:
+        - crusoe-system
+        - kube-system
+      subjects:
+        - kind: Group
+          name: crusoe:support:readonly
+          apiGroup: rbac.authorization.k8s.io
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+    # Restricted: only the operator group can read logs in slurm
+    - roleName: crusoe-support-logs
+      namespaces:
+        - slurm
+      subjects:
+        - kind: Group
+          name: crusoe:support:operator
+          apiGroup: rbac.authorization.k8s.io
+```
+
+> **Important:** the generated RoleBinding name is derived from `roleName`
+> (`<roleName>-binding`), so a namespace must appear in **only one** binding entry
+> per `roleName`. Partition the namespaces into disjoint sets — never list the same
+> namespace in two entries that share a `roleName`, or the RoleBindings will collide
+> and the release will fail.
+
 ## Usage
 
 ### Viewing Created ClusterRoles
